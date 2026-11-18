@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il gioco del condizionale</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f1e7; --ink:#1f2a2e; --muted:#5d6a6e; --card:#fffdf8; --line:#e2d8c6;
+  --a:#c4532d; --b:#2d6f8c; --ok:#2f7d4f; --ko:#b23a3a; --hl:#f3c54a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,sans-serif;font-size:18px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:16px;justify-content:space-between;padding:16px 24px;border-bottom:2px solid var(--line)}
+h1{font-family:Fraunces,serif;font-weight:800;margin:0;font-size:28px;letter-spacing:-.01em}
+h1 span{color:var(--a)}
+.teams{display:flex;gap:12px}
+.team{display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:6px 10px}
+.team input{width:110px;border:none;background:transparent;font:inherit;font-weight:700}
+.team.a input{color:var(--a)} .team.b input{color:var(--b)}
+.score{font-family:Fraunces,serif;font-size:30px;font-weight:800;min-width:36px;text-align:center}
+.team button{width:34px;height:34px;border-radius:50%;border:none;font-size:20px;font-weight:700;cursor:pointer;color:#fff}
+.team.a button{background:var(--a)} .team.b button{background:var(--b)}
+.team button.minus{background:#cfc6b6;color:var(--ink)}
+nav{display:flex;flex-wrap:wrap;gap:8px;padding:14px 24px}
+nav button{font:inherit;font-weight:700;padding:10px 16px;border-radius:999px;border:2px solid var(--line);background:var(--card);cursor:pointer;color:var(--ink)}
+nav button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{max-width:980px;margin:0 auto;padding:8px 24px 48px}
+.intro{color:var(--muted);margin:6px 0 18px}
+.stage{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:28px;min-height:330px;display:flex;flex-direction:column;gap:18px;position:relative}
+.counter{color:var(--muted);font-weight:700;font-size:15px;display:flex;justify-content:space-between}
+.prompt{font-family:Fraunces,serif;font-weight:600;font-size:clamp(28px,5vw,52px);line-height:1.15;text-align:center;margin:10px 0}
+.prompt .wrong{color:var(--ko);text-decoration:wavy underline;text-decoration-thickness:2px;text-underline-offset:8px}
+.prompt .gap{display:inline-block;min-width:3.2em;border-bottom:4px solid var(--ink)}
+.sub{text-align:center;color:var(--muted);font-size:20px}
+.answer{display:none;text-align:center;border-top:2px dashed var(--line);padding-top:16px}
+.answer.show{display:block;animation:pop .25s ease}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.answer .right{font-family:Fraunces,serif;font-size:clamp(28px,5vw,46px);font-weight:800;color:var(--ok)}
+.answer .rule{margin-top:8px;font-size:19px}
+.answer .verdict{font-weight:700;font-size:24px;margin-bottom:4px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:auto}
+.btn{font:inherit;font-weight:700;font-size:18px;padding:12px 20px;border-radius:12px;border:none;cursor:pointer;background:var(--ink);color:var(--bg)}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+.btn.hl{background:var(--hl);color:var(--ink)}
+.btn.ok{background:var(--ok)} .btn.ko{background:var(--ko)}
+.timer{position:absolute;top:18px;right:22px;font-family:Fraunces,serif;font-weight:800;font-size:26px;color:var(--muted)}
+.timer.low{color:var(--ko)}
+.tag{display:inline-block;font-size:14px;font-weight:700;padding:4px 10px;border-radius:999px;background:#efe6d4;color:var(--muted)}
+.opts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;color:var(--muted);font-size:16px}
+.opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+table{border-collapse:collapse;width:100%;font-size:18px}
+td,th{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-family:Fraunces,serif;font-size:19px}
+.rules h2{font-family:Fraunces,serif;margin:6px 0 10px;font-size:24px}
+.rules .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.rules .box{background:#fbf6ec;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.rules .box b{color:var(--a)}
+.rules .ends{font-family:Fraunces,serif;font-size:22px;letter-spacing:.02em}
+.hidden{display:none !important}
+.solo{display:flex;align-items:center;gap:12px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:6px 14px;font-weight:700}
+.solo .score{color:var(--ok)}
+.solo button{font:inherit;font-size:14px;border:none;background:#cfc6b6;border-radius:8px;padding:6px 10px;cursor:pointer}
+.answerbox{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.answerbox input{font:inherit;font-size:26px;padding:10px 16px;border:3px solid var(--line);border-radius:12px;min-width:min(340px,100%);text-align:center;background:#fff}
+.answerbox input:focus{outline:none;border-color:var(--b)}
+.answerbox input.good{border-color:var(--ok);color:var(--ok)}
+.answerbox input.bad{border-color:var(--ko);color:var(--ko);text-decoration:line-through}
+.modal{position:fixed;inset:0;background:rgba(31,42,46,.55);display:flex;align-items:center;justify-content:center;z-index:10;padding:20px}
+.modal .box{background:var(--card);border-radius:22px;padding:30px;max-width:640px;width:100%;text-align:center}
+.modal h2{font-family:Fraunces,serif;font-size:32px;margin:0 0 6px}
+.modal .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:20px}
+.modal .choice{font:inherit;cursor:pointer;border:3px solid var(--line);background:#fbf6ec;border-radius:16px;padding:20px;text-align:left;color:var(--ink)}
+.modal .choice:hover{border-color:var(--ink)}
+.modal .choice b{display:block;font-family:Fraunces,serif;font-size:24px;margin-bottom:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Il gioco del <span>condizionale</span></h1>
+  <div class="solo hidden" id="soloBox">Punti <span class="score" id="soloScore">0</span> / <span id="soloTot">0</span> <button id="soloReset">Azzera</button></div>
+  <div class="teams" id="teamsBox">
+    <div class="team a"><input value="Squadra A" aria-label="Nome squadra A"><button class="minus" data-t="a" data-d="-1">−</button><div class="score" id="sa">0</div><button data-t="a" data-d="1">+</button></div>
+    <div class="team b"><input value="Squadra B" aria-label="Nome squadra B"><button class="minus" data-t="b" data-d="-1">−</button><div class="score" id="sb">0</div><button data-t="b" data-d="1">+</button></div>
+  </div>
+</header>
+<nav id="nav">
+  <button data-r="errori" class="on">1 · Caccia all'errore</button>
+  <button data-r="vf">2 · Giusto o sbagliato?</button>
+  <button data-r="coniuga">3 · Coniuga!</button>
+  <button data-r="frasi">4 · Completa la frase</button>
+  <button data-r="regole">📌 Regole</button>
+  <button id="modeBtn" style="margin-left:auto" title="Cambia modalità">⚙ Modalità</button>
+  <button id="snd" title="Attiva/disattiva i suoni">🔊 Suoni sì</button>
+</nav>
+<div class="modal" id="modal">
+  <div class="box">
+    <h2>Come giocate?</h2>
+    <p style="color:var(--muted);margin:0">Giocate a squadre?</p>
+    <div class="choices">
+      <button class="choice" data-m="squadre"><b>👥 Sì, a squadre</b>Due squadre: l'insegnante fa le domande, mostra la soluzione e assegna i punti.</button>
+      <button class="choice" data-m="solo"><b>✍️ No, da soli</b>Scrivi la risposta: il gioco la controlla e conta i punti in automatico.</button>
+    </div>
+  </div>
+</div>
+<main>
+  <p class="intro" id="intro"></p>
+  <div class="stage" id="stage"></div>
+</main>
+
+<script>
+/* ---------- DATI ---------- */
+const ERRORI = [
+  ["mangerie","mangerei","io → <b>-ei</b>, non -ie. E i verbi in <b>-giare</b> perdono la i: mangi-are → manger-"],
+  ["anderemmo","andremmo","<b>andare</b> ha la radice corta: <b>andr-</b> (andrei, andresti, andremmo…)"],
+  ["comprebbe","comprerebbe","Verbi in <b>-are</b>: la a diventa <b>e</b> e si aggiunge la desinenza: compr-<b>er</b>-ebbe"],
+  ["venereste","verreste","<b>venire</b> → radice <b>verr-</b> (doppia r!)"],
+  ["dormerie","dormirei","Verbi in <b>-ire</b> tengono la <b>i</b>: dormir-ei. E io → <b>-ei</b>"],
+  ["viverebbero","vivrebbero","<b>vivere</b> → radice corta <b>vivr-</b>"],
+  ["mangierei","mangerei","Verbi in <b>-giare / -ciare</b>: la i sparisce → manger-ei, comincer-ei"],
+  ["venirette","verreste","<b>venire</b> → <b>verr-</b>; voi → <b>-este</b>"],
+  ["beverebbe","berrebbe","<b>bere</b> → radice <b>berr-</b> (doppia r!)"],
+  ["saprei","saprei","<b>Giusto!</b> sapere → <b>sapr-</b>: saprei, sapresti, saprebbe…", true],
+  ["veniereste","verreste","<b>venire</b> → <b>verr-</b> + este. Nessuna i, nessuna n!"],
+  ["ho vorrei (= ho voglia)","avrei voglia","Non due verbi coniugati insieme! <b>avere voglia</b> → <b>avr</b>ei voglia. (Oppure semplicemente: <b>vorrei</b>)"],
+  ["arriverremo","arriveremmo","Una <b>r</b>, due <b>m</b>! Attenzione: <i>arriveremo</i> (una m) = futuro; <b>arriveremmo</b> (mm) = condizionale"],
+  ["pageremmo","pagheremmo","Verbi in <b>-gare / -care</b>: aggiungi la <b>h</b> per tenere il suono duro → pag<b>h</b>eremmo, cerc<b>h</b>erei"],
+  ["preferemmo","preferiremmo","Verbi in <b>-ire</b> tengono la <b>i</b>: prefer<b>ir</b>-emmo"],
+];
+
+const VF = [
+  ["comprerei",true,"comprerei","compr-are → compr<b>er</b>-ei"],
+  ["cercarebbe",false,"cercherebbe","-care → <b>-cher-</b>, e la a diventa e"],
+  ["potrebbero",true,"potrebbero","potere → <b>potr-</b>"],
+  ["vederei",false,"vedrei","vedere → radice corta <b>vedr-</b>"],
+  ["terrei",true,"terrei","tenere → <b>terr-</b>"],
+  ["sarebbi (io)",false,"sarei","io → <b>-ei</b>: sarei. (Sarebbe = lui/lei)"],
+  ["faremmo",true,"faremmo","fare → <b>far-</b> + emmo"],
+  ["rimanerei",false,"rimarrei","rimanere → <b>rimarr-</b>"],
+  ["cominciarei",false,"comincerei","-ciare → la i sparisce e a → e: <b>comincer-</b>"],
+  ["dovremmo",true,"dovremmo","dovere → <b>dovr-</b>"],
+  ["noi parleremo (condizionale?)",false,"parleremmo","Una m = futuro. Il condizionale ha <b>due m</b>: parleremmo"],
+  ["tenerei",false,"terrei","tenere → <b>terr-</b>"],
+  ["viaggierei",false,"viaggerei","-giare → la i sparisce: <b>viagger-</b>ei"],
+  ["staresti",true,"staresti","stare → <b>star-</b> + esti"],
+  ["dormirebbero",true,"dormirebbero","-ire tiene la i: <b>dormir-</b>"],
+  ["volerei (= io voglio, gentile)",false,"vorrei","volere → <b>vorr-</b>"],
+];
+
+const FRASI = [
+  ["(Io – volere)","___ un caffè, per favore.","Vorrei","volere → vorr-"],
+  ["Al tuo posto (io – andare)","___ dal medico.","andrei","andare → andr-"],
+  ["(Tu – potere)","___ aprire la finestra?","Potresti","potere → potr-"],
+  ["Noi (venire)","___ volentieri alla festa, ma lavoriamo.","verremmo","venire → verr-"],
+  ["Mia madre (bere)","___ un tè caldo.","berrebbe","bere → berr-"],
+  ["Voi (pagare)","___ con la carta?","paghereste","-gare → -gher-"],
+  ["I miei amici (vivere)","___ volentieri in Italia.","vivrebbero","vivere → vivr-"],
+  ["(Io – avere)","___ voglia di una pizza.","Avrei","avere → avr-"],
+  ["Che cosa (tu – fare)","___ al mio posto?","faresti","fare → far-"],
+  ["Loro (preferire)","___ restare a casa.","preferirebbero","-ire → -ir-"],
+  ["Noi (arrivare)","___ prima, ma c'è traffico.","arriveremmo","-are → -er- · noi = -emmo (mm!)"],
+  ["Ahmed (mangiare)","___ ancora, ma è pieno.","mangerebbe","-giare → manger-"],
+  ["(Voi – sapere)","___ dirmi dov'è la stazione?","Sapreste","sapere → sapr-"],
+  ["Fatima (cercare)","___ un lavoro a Roma.","cercherebbe","-care → -cher-"],
+  ["Noi (dormire)","___ ancora un'ora!","dormiremmo","-ire → dormir-"],
+  ["Scusi, mi","___ (potere) dire dov'è la stazione?","potrebbe","<i>Scusi</i> → forma di cortesia (Lei) = 3ª persona · potere → potr-"],
+  ["Mah, non so…","___ (potere) essere una buona idea.","Potrebbe","Il soggetto è <i>questa cosa / l'idea</i> = 3ª persona · potere → potr-"],
+  ["Quasi quasi","___ (rimanere) a casa stasera: sono un po' stanco.","rimarrei","<i>sono stanco</i> → io · rimanere → rimarr- (doppia r)"],
+];
+
+const VERBI = [
+  // [infinito, radice, categoria, irregolare?]
+  ["parlare","parler","-are → -er-",0],["comprare","comprer","-are → -er-",0],["arrivare","arriver","-are → -er-",0],
+  ["mangiare","manger","-giare: via la i",0],["cominciare","comincer","-ciare: via la i",0],
+  ["cercare","cercher","-care: + h",0],["pagare","pagher","-gare: + h",0],
+  ["prendere","prender","-ere",0],["scrivere","scriver","-ere",0],
+  ["dormire","dormir","-ire: tiene la i",0],["preferire","preferir","-ire: tiene la i",0],["partire","partir","-ire: tiene la i",0],
+  ["essere","sar","irregolare",1],["avere","avr","radice corta",1],["andare","andr","radice corta",1],
+  ["potere","potr","radice corta",1],["dovere","dovr","radice corta",1],["sapere","sapr","radice corta",1],
+  ["vedere","vedr","radice corta",1],["vivere","vivr","radice corta",1],
+  ["venire","verr","doppia r",1],["volere","vorr","doppia r",1],["bere","berr","doppia r",1],
+  ["tenere","terr","doppia r",1],["rimanere","rimarr","doppia r",1],
+  ["fare","far","-are corto",1],["dare","dar","-are corto",1],["stare","star","-are corto",1],
+];
+const PERS = [["io","ei"],["tu","esti"],["lui / lei","ebbe"],["noi","emmo"],["voi","este"],["loro","ebbero"]];
+
+const RULES=`<div class="rules">
+      <h2>Desinenze (uguali per tutti i verbi)</h2>
+      <p class="ends">io <b>-ei</b> · tu <b>-esti</b> · lui/lei <b>-ebbe</b> · noi <b>-emmo</b> · voi <b>-este</b> · loro <b>-ebbero</b></p>
+      <div class="grid">
+        <div class="box"><b>-are → -er-</b><br>parl<u>er</u>ei, compr<u>er</u>ebbe, arriv<u>er</u>emmo</div>
+        <div class="box"><b>-ere → -er-</b><br>prenderei, scriveresti</div>
+        <div class="box"><b>-ire → -ir-</b> (la i resta!)<br>dorm<u>ir</u>ei, prefer<u>ir</u>emmo</div>
+        <div class="box"><b>-care / -gare → + h</b><br>cerc<u>h</u>erei, pag<u>h</u>eremmo</div>
+        <div class="box"><b>-ciare / -giare → via la i</b><br>comincerei, mangerei, viaggerei</div>
+        <div class="box"><b>Radice corta</b><br>avere <u>avr</u>- · andare <u>andr</u>- · potere <u>potr</u>- · dovere <u>dovr</u>- · sapere <u>sapr</u>- · vedere <u>vedr</u>- · vivere <u>vivr</u>-</div>
+        <div class="box"><b>Doppia r</b><br>venire <u>verr</u>- · volere <u>vorr</u>- · bere <u>berr</u>- · tenere <u>terr</u>- · rimanere <u>rimarr</u>-</div>
+        <div class="box"><b>Speciali</b><br>essere <u>sar</u>- · fare <u>far</u>- · dare <u>dar</u>- · stare <u>star</u>-</div>
+        <div class="box"><b>Futuro o condizionale?</b><br>noi parler<u>emo</u> = futuro<br>noi parler<u>emmo</u> = condizionale</div>
+      </div></div>`;
+/* ---------- RISPOSTE ALTERNATIVE ACCETTATE (modalità da soli) ---------- */
+const ALT_ERRORI = {
+  "saprei": ["saprei","giusto","è giusto","e giusto","corretto","è corretto","va bene","ok"],
+  "ho vorrei (= ho voglia)": ["avrei voglia","vorrei"],
+};
+
+/* ---------- STATO ---------- */
+let mode = null;                          // 'squadre' | 'solo'
+const score = {a:0,b:0};
+const solo = {ok:0,tot:0};
+document.querySelectorAll('.team button').forEach(b=>b.onclick=()=>{
+  const t=b.dataset.t; score[t]=Math.max(0,score[t]+ +b.dataset.d);
+  document.getElementById('s'+t).textContent=score[t];
+});
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+let round='errori', idx=0, deck=[], timerId=null, timeLeft=0, onlyIrr=false, last=null, cur=null;
+let answered=false, phase='answer';       // per "giusto o sbagliato": 'verdict' → 'fix'
+const stage=document.getElementById('stage'), intro=document.getElementById('intro');
+
+const INTRO_SQ={
+  errori:"Questi errori sono veri — li ha scritti la classe! Leggi la forma sbagliata: chi la corregge per primo (e spiega perché) prende 1 punto. Attenzione: una forma è giusta…",
+  vf:"Giusto o sbagliato? La squadra risponde. Se è sbagliato, +1 punto extra per chi dà la forma corretta.",
+  coniuga:"Un verbo e una persona a caso. 20 secondi per coniugare al condizionale!",
+  frasi:"Completa la frase con il verbo al condizionale.",
+  regole:"Il riepilogo da tenere a mente."
+};
+const INTRO_SOLO={
+  errori:"Questi errori sono veri! Scrivi la forma corretta. Attenzione: una forma è già giusta — in quel caso scrivi la stessa parola (o «giusto»).",
+  vf:"La forma è giusta o sbagliata? Se è sbagliata, scrivi anche la forma corretta: punto extra!",
+  coniuga:"Un verbo e una persona a caso: scrivi il condizionale.",
+  frasi:"Scrivi il verbo al condizionale che completa la frase.",
+  regole:"Il riepilogo da tenere a mente."
+};
+
+/* ---------- MODALITÀ ---------- */
+function setMode(m){
+  mode=m;
+  document.getElementById('modal').classList.add('hidden');
+  document.getElementById('teamsBox').classList.toggle('hidden', m!=='squadre');
+  document.getElementById('soloBox').classList.toggle('hidden', m!=='solo');
+  setRound(round);
+}
+document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{ audio(); setMode(b.dataset.m); });
+document.getElementById('modeBtn').onclick=()=>{ stopTimer(); document.getElementById('modal').classList.remove('hidden'); };
+document.getElementById('soloReset').onclick=()=>{ solo.ok=0; solo.tot=0; updSolo(); };
+function updSolo(){ document.getElementById('soloScore').textContent=solo.ok; document.getElementById('soloTot').textContent=solo.tot; }
+
+function setRound(r){
+  round=r; idx=0; stopTimer();
+  document.querySelectorAll('#nav button[data-r]').forEach(b=>b.classList.toggle('on',b.dataset.r===r));
+  intro.textContent=(mode==='solo'?INTRO_SOLO:INTRO_SQ)[r];
+  if(r==='errori') deck=shuffle(ERRORI);
+  if(r==='vf') deck=shuffle(VF);
+  if(r==='frasi') deck=shuffle(FRASI);
+  render();
+}
+document.querySelectorAll('#nav button[data-r]').forEach(b=>b.onclick=()=>setRound(b.dataset.r));
+document.getElementById('snd').onclick=e=>{
+  soundOn=!soundOn; e.target.textContent=soundOn?'🔊 Suoni sì':'🔇 Suoni no';
+  if(soundOn){ audio(); beep(880,.12); }
+};
+
+/* ---------- CONTROLLO RISPOSTE ---------- */
+const norm=s=>s.toLowerCase().replace(/[’`]/g,"'").replace(/[.,!?;:«»"]/g,' ').replace(/\s+/g,' ').trim();
+const stripPron=s=>s.replace(/^(io|tu|lui\s*\/\s*lei|lui|lei|noi|voi|loro)\s+/,'');
+function accepted(){
+  if(round==='errori') return ALT_ERRORI[cur[0]] || [cur[1]];
+  if(round==='frasi') return [cur[2]];
+  if(round==='vf') return [cur[2]];
+  if(round==='coniuga') return [cur.answer];
+}
+function isRight(val){
+  let v=norm(val); if(round==='coniuga'||round==='vf') v=stripPron(v);
+  return accepted().some(a=>stripPron(norm(a))===v || norm(a)===v);
+}
+
+/* ---------- RENDER ---------- */
+function teamControls(){
+  const nextBtn = round==='coniuga'
+    ? `<button class="btn" onclick="render()">🎲 Nuovo verbo</button>`
+    : `<button class="btn" onclick="next()">Avanti →</button>`;
+  return `<div class="controls">
+    <button class="btn hl" onclick="reveal()">Mostra soluzione</button>
+    <button class="btn ghost" onclick="startTimer(20)">⏱ 20 s</button>${nextBtn}</div>`;
+}
+function soloControls(){
+  const nextBtn = round==='coniuga'
+    ? `<button class="btn" onclick="render()">🎲 Nuovo verbo</button>`
+    : `<button class="btn" onclick="next()">Avanti →</button>`;
+  return `<div class="controls">
+    <button class="btn ghost" id="giveup" onclick="giveUp()">Non lo so</button>
+    <button class="btn ghost" onclick="startTimer(20)">⏱ 20 s</button>${nextBtn}</div>`;
+}
+const inputBox=(ph='Scrivi qui la risposta…')=>`<div class="answerbox" id="f">
+  <input id="inp" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${ph}">
+  <button class="btn ok" type="button" id="checkBtn">Controlla ✓</button></div>`;
+function counter(){return `<div class="counter"><span>${idx+1} / ${deck.length}</span><span></span></div>`}
+
+function render(){
+  stopTimer(); answered=false; phase='answer';
+  const S = mode==='solo';
+  let h='<div class="timer" id="timer"></div>';
+  if(round==='errori'){
+    cur=deck[idx]; const [w,r,rule,ok]=cur;
+    h+=counter()+`<div class="sub">Uno studente ha scritto:</div>
+      <div class="prompt"><span class="wrong">${w}</span></div>
+      <div class="sub">Che cosa non va? Correggi!</div>
+      ${S?inputBox('Forma corretta…'):''}
+      <div class="answer" id="ans"><div class="verdict" id="verd"></div>
+        ${ok?'<div class="verdict" style="color:var(--ok)">✅ Era giusto!</div>':''}
+        <div class="right">${r}</div><div class="rule">${rule}</div></div>`;
+  }
+  if(round==='vf'){
+    cur=deck[idx]; const [f,ok,r,rule]=cur; phase='verdict';
+    h+=counter()+`<div class="prompt">${f}</div>
+      ${S?`<div class="controls" id="vfBtns" style="margin-top:0">
+          <button class="btn ok" onclick="verdict(true)">✅ Giusto</button>
+          <button class="btn ko" onclick="verdict(false)">❌ Sbagliato</button></div>
+        <div id="fixBox" class="hidden"><div class="sub" style="margin-bottom:10px">Bravo! Ora scrivi la forma corretta (+1 punto):</div>${inputBox('Forma corretta…')}</div>`:''}
+      <div class="answer" id="ans"><div class="verdict" id="verd"></div>
+        <div class="verdict" style="color:${ok?'var(--ok)':'var(--ko)'}">${ok?'La forma è giusta':'La forma è sbagliata'}</div>
+        ${ok?'':`<div class="right">${r}</div>`}<div class="rule">${rule}</div></div>`;
+  }
+  if(round==='frasi'){
+    cur=deck[idx]; const [s,rest,r,rule]=cur;
+    h+=counter()+`<div class="prompt" style="font-size:clamp(24px,4vw,40px)">${s} ${rest.replace('___','<span class="gap">&nbsp;</span>')}</div>
+      ${S?inputBox('Verbo al condizionale…'):''}
+      <div class="answer" id="ans"><div class="verdict" id="verd"></div><div class="right">${r}</div><div class="rule">${rule}</div></div>`;
+  }
+  if(round==='coniuga'){
+    let v,p;
+    do{
+      const pool=onlyIrr?VERBI.filter(x=>x[3]):VERBI;
+      v=pool[Math.floor(Math.random()*pool.length)]; p=PERS[Math.floor(Math.random()*6)];
+    }while(last && last===v[0]+p[0]);
+    last=v[0]+p[0]; cur={answer:v[1]+p[1]};
+    h+=`<div class="counter"><span>Verbo a sorpresa</span><span></span></div>
+      <div class="prompt">${p[0]} · <span style="color:var(--b)">${v[0]}</span></div>
+      <div class="opts"><label><input type="checkbox" id="irr" ${onlyIrr?'checked':''}> solo verbi irregolari / difficili</label></div>
+      ${S?inputBox('Condizionale…'):''}
+      <div class="answer" id="ans"><div class="verdict" id="verd"></div><div class="right">${p[0]} ${v[1]}<u>${p[1]}</u></div>
+        <div class="rule"><span class="tag">${v[2]}</span> &nbsp; radice <b>${v[1]}-</b> + <b>-${p[1]}</b></div></div>`;
+  }
+  if(round==='regole'){
+    stage.innerHTML=RULES; return;
+  }
+  h += S ? soloControls() : teamControls();
+  stage.innerHTML=h;
+  const irr=document.getElementById('irr'); if(irr) irr.onchange=e=>{onlyIrr=e.target.checked; render();};
+  const inp=document.getElementById('inp');
+  if(inp){
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); submitAns(); } });
+    document.getElementById('checkBtn').addEventListener('click',()=>submitAns());
+    if(round!=='vf') inp.focus();
+  }
+}
+
+/* ---------- AZIONI ---------- */
+function reveal(){const a=document.getElementById('ans'); if(a) a.classList.add('show'); stopTimer();}
+function next(){ if(round==='coniuga'){render();return;} idx=(idx+1)%deck.length; if(idx===0) deck=shuffle(deck); render();}
+function showVerdict(ok,text){
+  const v=document.getElementById('verd');
+  v.innerHTML=text; v.style.color=ok?'var(--ok)':'var(--ko)';
+  if(soundOn){ audio(); ok?soundRight():soundWrong(); }
+}
+function lockInput(ok){
+  const inp=document.getElementById('inp'); if(!inp) return;
+  inp.readOnly=true; inp.classList.add(ok?'good':'bad');
+  const btn=document.getElementById('checkBtn'); if(btn) btn.textContent='Avanti →';
+}
+function point(ok){ solo.tot++; if(ok) solo.ok++; updSolo(); }
+
+function submitAns(){
+  if(answered){ next(); return; }
+  const inp=document.getElementById('inp'); const val=inp.value;
+  if(!val.trim()){ inp.focus(); return; }
+  answered=true; stopTimer();
+  const ok=isRight(val);
+  if(round==='vf'){ // fase di correzione (punto extra)
+    point(ok); lockInput(ok);
+    showVerdict(ok, ok?'✅ Esatto! +1 punto extra':'❌ Non è la forma giusta');
+    reveal(); return;
+  }
+  point(ok); lockInput(ok);
+  showVerdict(ok, ok?'✅ Esatto! +1':'❌ Sbagliato — ecco la soluzione:');
+  reveal();
+}
+function verdict(said){
+  if(phase!=='verdict') return;
+  stopTimer();
+  const isOk=cur[1], good=(said===isOk);
+  document.querySelectorAll('#vfBtns button').forEach(b=>b.disabled=true);
+  point(good);
+  if(good && !isOk){ // ha visto l'errore: ora correzione
+    phase='fix';
+    if(soundOn){ audio(); soundRight(); }
+    document.getElementById('fixBox').classList.remove('hidden');
+    document.getElementById('inp').focus();
+    return;
+  }
+  answered=true; phase='done';
+  showVerdict(good, good?'✅ Esatto! +1':'❌ No!');
+  reveal();
+}
+function giveUp(){
+  if(mode!=='solo'){ reveal(); return; }
+  if(answered || phase==='done'){ reveal(); return; }
+  if(round==='vf' && phase==='fix'){ point(false); }
+  else point(false);
+  answered=true; phase='done'; lockInput(false);
+  document.querySelectorAll('#vfBtns button').forEach(b=>b.disabled=true);
+  showVerdict(false,'Ecco la soluzione:');
+  reveal();
+}
+
+/* ---------- SUONI ---------- */
+let actx=null;
+function audio(){
+  try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }catch(e){ actx=null; }
+  return actx;
+}
+function beep(freq,dur,when=0,type='sine',vol=.25){
+  const c=actx; if(!c) return;
+  const t0=c.currentTime+when, o=c.createOscillator(), g=c.createGain();
+  o.type=type; o.frequency.value=freq;
+  g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(vol,t0+.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  o.connect(g).connect(c.destination); o.start(t0); o.stop(t0+dur+.05);
+}
+const soundStart=()=>{ beep(660,.15,0); beep(990,.25,.16); };          // "via!"
+const soundTick =()=>beep(1200,.06,0,'square',.08);                     // ultimi 5 secondi
+const soundEnd  =()=>{ beep(440,.35,0,'sawtooth',.2); beep(330,.6,.3,'sawtooth',.2); }; // tempo scaduto
+const soundRight=()=>{ beep(880,.12,0); beep(1320,.22,.12); };
+const soundWrong=()=>{ beep(220,.3,0,'square',.12); };
+let soundOn=true;
+
+function startTimer(s){
+  stopTimer(); timeLeft=s; const t=document.getElementById('timer');
+  if(soundOn){ audio(); soundStart(); }
+  const tick=()=>{ if(!t) return; t.textContent=timeLeft; t.classList.toggle('low',timeLeft<=5);
+    if(timeLeft<=0){stopTimer(); t.textContent='⏰'; if(soundOn) soundEnd(); if(mode==='solo') timeUp(); return;}
+    if(soundOn && timeLeft<=5 && timeLeft<s) soundTick();
+    timeLeft--; };
+  tick(); timerId=setInterval(tick,1000);
+}
+function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}}
+function timeUp(){
+  if(answered || phase==='done') return;
+  point(false); answered=true; phase='done'; lockInput(false);
+  document.querySelectorAll('#vfBtns button').forEach(b=>b.disabled=true);
+  const v=document.getElementById('verd'); if(v){ v.innerHTML='⏰ Tempo scaduto!'; v.style.color='var(--ko)'; }
+  reveal();
+}
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT' || !mode) return;
+  if(e.key===' ' && mode==='squadre'){e.preventDefault(); reveal();}
+  if(e.key==='ArrowRight' && round!=='regole') next();
+});
+setRound('errori');
+</script>
+</body>
+</html>
